@@ -72,9 +72,10 @@ app.use((req,res,next)=>{
 
 
 //error handling middleware
-app.use((err,req,res,next)=>{
-    console.log("error found",err)
-    res.json({message:"error",reason:err.message})
+app.use((err, req, res, next) => {
+    console.log("error found", err)
+    const status = err.status || 500;
+    res.status(status).json({ message: "error", reason: err.message })
 })
 
 app.use((err, req, res, next) => {
