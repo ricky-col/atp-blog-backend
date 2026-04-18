@@ -3,6 +3,7 @@ import { authenticate } from "../Services/authServices.js"
 import { UserTypeModel } from "../models/userModel.js";
 import { hash, compare } from "bcrypt"
 import { verifyToken } from "../middlewares/verifyToken.js"
+import mongoose from "mongoose";
 
 export const commonRoute = exp.Router()
 
@@ -20,7 +21,11 @@ commonRoute.post("/login", async (req, res) => {
         secure: isProduction 
     });
     //respose
-    res.status(200).json({ message: "login successfully", user })
+    res.status(200).json({ 
+        message: "login successfully", 
+        user, 
+        database: mongoose.connection.name 
+    })
 })
 
 
@@ -81,7 +86,8 @@ commonRoute.get("/check-auth", verifyToken("USER","AUTHOR","ADMIN"), async (req,
     }
     res.status(200).json({
        message:"authenticated",
-       payload: user
+       payload: user,
+       database: mongoose.connection.name
     });
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });

@@ -7,6 +7,7 @@ import { checkAuthor } from "../middlewares/checkauthor.js"
 import upload from "../config/multer.js"
 import { uploadToCloudinary } from "../config/cloudinaryUpload.js";
 import cloudinary from "../config/cloudinary.js"
+import mongoose from "mongoose";
 
 
 
@@ -37,6 +38,7 @@ userRoute.post(
                 res.status(201).json({
                 message: "user created",
                 payload: newUserObj,
+                database: mongoose.connection.name
                 });
 
             } catch (err) {

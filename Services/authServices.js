@@ -5,20 +5,32 @@ import {config} from "dotenv"
 config();
 
 //register function
-export const register = async (userObj) =>{
-    //create documnet
+export const register = async (userObj) => {
+    console.log("Registering new user with email:", userObj.email, "and role:", userObj.role);
+    
+    //create document
     const userDoc = new UserTypeModel(userObj);
-    //validate for empty passwords
+    
+    //validate
     await userDoc.validate();
+    
+    if (!userObj.password) {
+        console.error("Registration error: Password is missing in userObj!");
+        throw new Error("Password is required for registration");
+    }
+
     //hash and replace plain password
-    userDoc.password = await bcrypt.hash(userDoc.password, 10);
+    console.log("Hashing password for email:", userObj.email);
+    userDoc.password = await bcrypt.hash(userObj.password, 10);
+    
     //save user
     const created = await userDoc.save();
-    //convert documnet to object to remove password.    toObject is used to convert the mongo documnet into jsobject
+    console.log("User successfully saved to DB with role:", created.role);
+    
+    //convert document to object to remove password
     const newUserObj = created.toObject();
-    //remove password
     delete newUserObj.password;
-    //return user obj without password
+    
     return newUserObj;
 }
 //authentication function

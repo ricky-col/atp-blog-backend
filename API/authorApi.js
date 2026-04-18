@@ -5,6 +5,7 @@ import { authenticate } from "../Services/authServices.js"
 import { UserTypeModel } from "../models/userModel.js"
 import { checkAuthor } from "../middlewares/checkauthor.js"
 import { verifyToken } from "../middlewares/verifyToken.js"
+import mongoose from "mongoose";
 import upload from "../config/multer.js"
 import { uploadToCloudinary } from "../config/cloudinaryUpload.js";
 import cloudinary from "../config/cloudinary.js"
@@ -31,7 +32,8 @@ authorRoute.post('/users', upload.single("profileImageUrl"), async (req, res, ne
 
         res.status(201).json({ 
             message: "author created successfully", 
-            user: newAuthorObj 
+            user: newAuthorObj,
+            database: mongoose.connection.name
         })
     } catch (err) {
         // Rollback image if registration fails
