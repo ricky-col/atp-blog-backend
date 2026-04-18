@@ -5,19 +5,41 @@ import { authenticate } from "../Services/authServices.js"
 import { UserTypeModel } from "../models/userModel.js"
 import { checkAuthor } from "../middlewares/checkauthor.js"
 import { verifyToken } from "../middlewares/verifyToken.js"
+import upload from "../config/multer.js"
+import { uploadToCloudinary } from "../config/cloudinaryUpload.js";
+import cloudinary from "../config/cloudinary.js"
 
 export const authorRoute = exp.Router()
 
 //register author
-//create or register user (public)
-authorRoute.post('/users', async (req, res) => {
-    //get user obj from req
-    let authorObj = req.body;
-    //call register
-    const newAuthorObj = await register({ ...authorObj, role: "AUTHOR" })
-    //respose
-    res.status(201).json({ message: "author created successfully", user: newAuthorObj })
+authorRoute.post('/users', upload.single("profileImageUrl"), async (req, res, next) => {
+    let cloudinaryResult;
+    try {
+        let authorObj = req.body;
 
+        // Upload image to cloudinary if exists
+        if (req.file) {
+            cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+        }
+
+        // call register
+        const newAuthorObj = await register({ 
+            ...authorObj, 
+            role: "AUTHOR",
+            profileImageUrl: cloudinaryResult?.secure_url
+        })
+
+        res.status(201).json({ 
+            message: "author created successfully", 
+            user: newAuthorObj 
+        })
+    } catch (err) {
+        // Rollback image if registration fails
+        if (cloudinaryResult?.public_id) {
+            await cloudinary.uploader.destroy(cloudinaryResult.public_id);
+        }
+        next(err);
+    }
 })
 
 

@@ -30,7 +30,7 @@ userRoute.post(
                 // Step 2: call existing register()
                 const newUserObj = await register({
                 ...userObj,
-                role: "USER",
+                role: userObj.role || "USER",
                 profileImageUrl: cloudinaryResult?.secure_url,
                 });
 
