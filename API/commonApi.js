@@ -9,6 +9,7 @@ export const commonRoute = exp.Router()
 
 //login
 commonRoute.post("/login", async (req, res) => {
+    console.log("POST /common-api/login hit with body:", { ...req.body, password: "REDACTED" });
     //get user credentials from req
     let authorCred = req.body;
     //call authenticate

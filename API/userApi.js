@@ -18,6 +18,7 @@ userRoute.post(
         "/users",
         upload.single("profileImageUrl"),
         async (req, res, next) => {
+        console.log("POST /user-api/users hit");
         let cloudinaryResult;
 
             try {

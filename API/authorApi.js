@@ -14,6 +14,7 @@ export const authorRoute = exp.Router()
 
 //register author
 authorRoute.post('/users', upload.single("profileImageUrl"), async (req, res, next) => {
+    console.log("POST /author-api/users hit");
     let cloudinaryResult;
     try {
         let authorObj = req.body;
