@@ -22,42 +22,51 @@ export const register = async (userObj) =>{
     return newUserObj;
 }
 //authentication function
-export const authenticate = async ({ email,password,isActive}) => {
-    //check user with email 
-    const user = await UserTypeModel.findOne({ email })
-    if(!user)
-    {
-        const err = new Error("invalid password")
-        err.status = 401
-        throw err
+export const authenticate = async ({ email, password }) => {
+    console.log("Authenticating user with email:", email);
+    
+    //check user with email (case-insensitive search is safer)
+    const user = await UserTypeModel.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    
+    if (!user) {
+        console.log("Auth failed: User not found with email:", email);
+        const err = new Error("User not found with this email");
+        err.status = 401;
+        throw err;
     }
+
+    console.log("User found in DB. Stored hash exists:", !!user.password);
     
     //comparing the password
-    const isMatch = await bcrypt.compare(password,user.password)
-    if(!isMatch)
-    {
-        const err = new Error("invalid password")
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Bcrypt compare result:", isMatch);
+    
+    if (!isMatch) {
+        console.log("Auth failed: Incorrect password for user:", email);
+        const err = new Error("invalid password");
         err.status = 401;
-        throw err
+        throw err;
     }
 
-     //if user valid but blocked by admin
-    const active = await UserTypeModel.findOne({ isActive})
-    if(!user.isActive)
-    {
-        const err = new Error("your account is blocked,so please contact the admin")
-        err.status = 401
-        throw err
-
+    //check if user is active
+    if (!user.isActive) {
+        console.log("Auth failed: Account blocked for user:", email);
+        const err = new Error("your account is blocked, so please contact the admin");
+        err.status = 401;
+        throw err;
     }
+
     //generating jwt token
-    const token = jwt.sign({userId:user._id,
-        role:user.role,email:user.email},
-        process.env.JWT_SECRET,{expiresIn:"1h"}
+    const token = jwt.sign(
+        { userId: user._id, role: user.role, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
     );
+
     const userObj = user.toObject();
     delete userObj.password;
-    return { token,user : userObj};
+    console.log("Auth successful for user:", email);
+    return { token, user: userObj };
 };
 
 

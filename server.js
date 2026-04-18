@@ -71,59 +71,56 @@ app.use((req,res,next)=>{
 })
 
 
-//error handling middleware
+// Comprehensive error handling middleware
 app.use((err, req, res, next) => {
-    console.log("error found", err)
-    const status = err.status || 500;
-    res.status(status).json({ message: "error", reason: err.message })
-})
+  console.log("Error details:", {
+    name: err.name,
+    message: err.message,
+    status: err.status,
+    code: err.code
+  });
 
-app.use((err, req, res, next) => {
-
-  console.log("Error name:", err.name);
-  console.log("Error code:", err.code);
-  console.log("Full error:", err);
-
-  // mongoose validation error
+  // Mongoose validation error
   if (err.name === "ValidationError") {
     return res.status(400).json({
       message: "error occurred",
-      error: err.message,
+      reason: err.message,
     });
   }
 
-  // mongoose cast error
+  // Mongoose cast error (invalid IDs)
   if (err.name === "CastError") {
     return res.status(400).json({
       message: "error occurred",
-      error: err.message,
+      reason: "Invalid ID format",
     });
   }
 
+  // Handle duplicate key errors (code 11000)
   const errCode = err.code ?? err.cause?.code ?? err.errorResponse?.code;
-  const keyValue = err.keyValue ?? err.cause?.keyValue ?? err.errorResponse?.keyValue;
-
   if (errCode === 11000) {
-    const field = Object.keys(keyValue)[0];
-    const value = keyValue[field];
+    const keyValue = err.keyValue ?? err.cause?.keyValue ?? err.errorResponse?.keyValue;
+    const field = keyValue ? Object.keys(keyValue)[0] : "field";
+    const value = keyValue ? keyValue[field] : "unknown";
 
     return res.status(409).json({
       message: "error occurred",
-      error: `${field} "${value}" already exists`,
+      reason: `${field} "${value}" already exists`,
     });
   }
 
-  // custom errors
+  // Custom errors with status
   if (err.status) {
     return res.status(err.status).json({
-      message: "error occurred",
-      error: err.message,
+      message: "error",
+      reason: err.message,
     });
   }
 
-  // default server error
+  // Default server error
   res.status(500).json({
     message: "error occurred",
-    error: "Server side error",
+    reason: "Internal Server Error",
+    details: err.message
   });
 });
